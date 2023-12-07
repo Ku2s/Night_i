@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer un compte</title>
+</head>
+
+<body>
+    <h1>Créer un compte</h1>
+    <form action="/setup_password" method="post">
+        <label for="username">Nom d'utilisateur:</label>
+        <input type="text" id="username" name="username" required><br>
+        
+        <label for="password">Mot de passe:</label>
+        <input type="password" id="password" name="password" required><br>
+
+        <input type="submit" value="Créer le compte">
+    </form>
+
+    <p>Vous avez déjà un compte? <a href="/login">Connectez-vous ici</a>.</p>
+</body>
+
+</html>
