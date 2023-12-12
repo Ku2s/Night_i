@@ -1,80 +1,110 @@
 from flask import Flask, render_template, redirect, url_for, request
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from flask_sqlalchemy import SQLAlchemy
+import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'password'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Utilisation de SQLite à des fins de démonstration
-db = SQLAlchemy(app)
+app.config['SECRET_KEY'] = 'salutjesuisuneclé'
+
+# Connexion à la BD
+conn = sqlite3.connect('db.sqlite', check_same_thread=False)
 login_manager = LoginManager(app)
 
-# Modèle SQLAlchemy pour la base de données des utilisateurs
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+class Compte(UserMixin):
+    def __init__(self, user_id, nom, prenom, mail, pseudo, mot_de_passe_hash):
+        self.id = user_id
+        self.nom = nom
+        self.prenom = prenom
+        self.mail = mail
+        self.pseudo = pseudo
+        self.mot_de_passe_hash = mot_de_passe_hash
 
 # Fonction de chargement de l'utilisateur
 @login_manager.user_loader
 def load_user(user_id):
-    return User(user_id)
+    # Utilisez une requête SQL pour obtenir les informations de l'utilisateur à partir de la base de données
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Compte WHERE id = ?", (user_id,))
+    user_data = cursor.fetchone()
+    cursor.close()
 
+    if user_data:
+        return Compte(*user_data)
 
 @app.route('/')
 def home():
     if current_user.is_authenticated:
         return 'Bienvenue !!!'
     else:
-        return render_template('setup_login.html')  # Ajoutez un modèle pour définir le compte
+        return render_template('sign_in.html') 
 
-@app.route('/setup_password', methods=['GET', 'POST'])
-def setup_password():
+@app.route('/sign_in', methods=['POST'])
+def sign_in():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
 
-        # Vérifiez si l'utilisateur existe déjà dans la base de données
-        existing_user = User.query.filter_by(username=username).first()
+        name = request.form['prenom']
+        last_name = request.form['nom']
+        mail = request.form['mail']
+        username = request.form['pseudo']
+        password = request.form['mot_de_passe_hash']
+
+        # Vérif de pseudo
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (username,))
+        existing_user = cursor.fetchone()
         if existing_user:
+            cursor.close()
             return 'Nom d\'utilisateur déjà pris. Choisissez en un autre.'
-
-        # Créez un nouvel utilisateur avec le mot de passe haché
-        new_user = User(username=username, password_hash=generate_password_hash(password, method='sha256'))
-        db.session.add(new_user)
-        db.session.commit()
+        
+        # Insertion du nouveau compte dans la BD
+        hashed_password = generate_password_hash(password)
+        print(f"Mdp haché: {hashed_password};")
+        cursor.execute("INSERT INTO Compte (nom, prenom, mail, pseudo, mot_de_passe_hash) VALUES (?, ?, ?, ?, ?)",
+                       (last_name, name, mail, username, hashed_password))
+        conn.commit()
+        cursor.close()
 
         # Connectez automatiquement le nouvel utilisateur
-        login_user(new_user)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (username,))
+        new_user_data = cursor.fetchone()
+        cursor.close()
 
-        return 'Mot de passe initial configuré avec succès !'
+        if new_user_data:
+            new_user = Compte(*new_user_data)
+            login_user(new_user)
+            return render_template('index.html')
 
-    return render_template('setup_password.html')
+    return render_template('sign_in.html')
 
-# Page de login
-@app.route('/login')
-def login():
-    # Remplacez cette logique par votre propre logique d'authentification
-    user = User(user_id=1)
-    login_user(user)
-    return  '''
-    <p>Connecté !</p>
-    <p><a href="/protected">Accéder au site</a></p>
-    <p><a href="/logout">Déconnexion</a></p>
-    '''
+@app.route('/log_in', methods=['GET','POST'])
+def log_in():
+    if request.method == 'POST':
+        pseudo = request.form['pseudo']
+        mdp = request.form['mot_de_passe']
 
-# Page protégée (accessible uniquement après connexion)
-@app.route('/protected')
+        # Vérifiez dans la base de données si l'utilisateur existe et si le mot de passe est correct
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
+        user_data = cursor.fetchone()
+        cursor.close()
+
+        if user_data and check_password_hash(user_data[5], mdp):
+            user = Compte(*user_data)
+            login_user(user)
+            return render_template('index.html')
+        else:
+            return 'Échec de l\'authentification. Vérifiez vos informations de connexion.'
+    else :
+        return render_template('log_in.html')
+
+@app.route('/index', methods=['GET'])
 @login_required
-def protected():
-    return f'''
-    <p>Bienvenue, {current_user.id} !</p>
-    <p>Ici c'est secret</p>
-    <p><a href="/logout">Déconnexion</a></p>
-    '''
+def index():
+    return render_template('index.html')
 
-# Page de logout
-@app.route('/logout')
+@app.route('/logout', methods=['GET'])
 @login_required
 def logout():
     logout_user()
