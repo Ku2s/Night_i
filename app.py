@@ -21,10 +21,10 @@ class Compte(UserMixin):
 
 # Fonction de chargement de l'utilisateur
 @login_manager.user_loader
-def load_user(user_id):
-    # Utilisez une requête SQL pour obtenir les informations de l'utilisateur à partir de la base de données
+def load_user(pseudo):
+
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Compte WHERE id = ?", (user_id,))
+    cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
     user_data = cursor.fetchone()
     cursor.close()
 
@@ -34,7 +34,7 @@ def load_user(user_id):
 @app.route('/')
 def home():
     if current_user.is_authenticated:
-        return 'Bienvenue !!!'
+        return render_template('index.html')
     else:
         return render_template('sign_in.html') 
 
@@ -59,7 +59,6 @@ def sign_in():
         
         # Insertion du nouveau compte dans la BD
         hashed_password = generate_password_hash(password)
-        print(f"Mdp haché: {hashed_password};")
         cursor.execute("INSERT INTO Compte (nom, prenom, mail, pseudo, mot_de_passe_hash) VALUES (?, ?, ?, ?, ?)",
                        (last_name, name, mail, username, hashed_password))
         conn.commit()
@@ -84,7 +83,7 @@ def log_in():
         pseudo = request.form['pseudo']
         mdp = request.form['mot_de_passe']
 
-        # Vérifiez dans la base de données si l'utilisateur existe et si le mot de passe est correct
+        # Vérif pseudo et mdp dans la BD
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
         user_data = cursor.fetchone()
@@ -96,7 +95,7 @@ def log_in():
             return render_template('index.html')
         else:
             return 'Échec de l\'authentification. Vérifiez vos informations de connexion.'
-    else :
+    else:
         return render_template('log_in.html')
 
 @app.route('/index', methods=['GET'])
@@ -104,11 +103,12 @@ def log_in():
 def index():
     return render_template('index.html')
 
-@app.route('/logout', methods=['GET'])
-@login_required
-def logout():
+@app.route('/log_out', methods=['GET'])
+#@login_required
+def log_out():
     logout_user()
     return 'Déconnecté avec succès !'
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
