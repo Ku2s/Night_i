@@ -107,13 +107,12 @@ def log_in():
         return render_template('log_in.html')
 
 @app.route('/index', methods=['GET','POST'])
-@login_required
+#@login_required
 def index():
     if request.method == 'POST':
         pseudo_ami = request.form['pseudo_ami']
-
         if utilisateur_existant(pseudo_ami):
-            return 'Carré'
+            return 'Conversation initié'
         else:
             return 'Pseudo non valide'
     return render_template('index.html')
