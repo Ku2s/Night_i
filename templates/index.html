@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +7,13 @@
 </head>
 <body>
     <p>Bienvenue!</p>
-    <p>Ici c'est secret</p>
+    <post action="/index" method="post">
+
+            <label for="ami">Pseudo de l'ami:</label>
+            <input type="text" name="pseudo_ami" id="pseudo_ami" required>
+            <input type="submit" value="Discuster">
+
+    </post>
     <p><a href="/log_out">Déconnexion</a></p>
 </body>
 </html>

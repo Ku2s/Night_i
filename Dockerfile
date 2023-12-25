@@ -4,6 +4,11 @@ WORKDIR /app
 
 COPY app.py .
 COPY requirements.txt .
+COPY db.sqlite .
+COPY /templates .
+COPY /instance .
+COPY /__pycache__ .
+
 
 RUN pip install --no-cache-dir -r requirements.txt
 

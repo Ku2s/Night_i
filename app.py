@@ -3,6 +3,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'salutjesuisuneclé'
 
@@ -19,10 +20,21 @@ class Compte(UserMixin):
         self.pseudo = pseudo
         self.mot_de_passe_hash = mot_de_passe_hash
 
+def utilisateur_existant(pseudo):
+    
+    cursor = conn.cursor()
+    
+    cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
+    pseudo = cursor.fetchone()
+    if pseudo:
+        cursor.close()
+        return True
+    print('Echec de l''obtention des informations utilisateur')
+    return False
+
 # Fonction de chargement de l'utilisateur
 @login_manager.user_loader
 def load_user(pseudo):
-
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
     user_data = cursor.fetchone()
@@ -49,15 +61,11 @@ def sign_in():
         password = request.form['mot_de_passe_hash']
 
         # Vérif de pseudo
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (username,))
-        existing_user = cursor.fetchone()
-        if existing_user:
-            cursor.close()
+        if utilisateur_existant(username)== True:
             return 'Nom d\'utilisateur déjà pris. Choisissez en un autre.'
         
         # Insertion du nouveau compte dans la BD
+        cursor = conn.cursor()
         hashed_password = generate_password_hash(password)
         cursor.execute("INSERT INTO Compte (nom, prenom, mail, pseudo, mot_de_passe_hash) VALUES (?, ?, ?, ?, ?)",
                        (last_name, name, mail, username, hashed_password))
@@ -83,13 +91,13 @@ def log_in():
         pseudo = request.form['pseudo']
         mdp = request.form['mot_de_passe']
 
-        # Vérif pseudo et mdp dans la BD
+        # Vérif des données dont le mdp dans la BD
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
         user_data = cursor.fetchone()
         cursor.close()
 
-        if user_data and check_password_hash(user_data[5], mdp):
+        if utilisateur_existant(pseudo) and check_password_hash(user_data[5], mdp):
             user = Compte(*user_data)
             login_user(user)
             return render_template('index.html')
@@ -98,9 +106,16 @@ def log_in():
     else:
         return render_template('log_in.html')
 
-@app.route('/index', methods=['GET'])
+@app.route('/index', methods=['GET','POST'])
 @login_required
 def index():
+    if request.method == 'POST':
+        pseudo_ami = request.form['pseudo_ami']
+
+        if utilisateur_existant(pseudo_ami):
+            return 'Carré'
+        else:
+            return 'Pseudo non valide'
     return render_template('index.html')
 
 @app.route('/log_out', methods=['GET'])
