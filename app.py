@@ -1,11 +1,13 @@
-from flask import Flask, render_template, redirect, url_for, request
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask import Flask, render_template, request
+from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_socketio import SocketIO, send, join_room, leave_room
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'salutjesuisuneclé'
+socketio = SocketIO(app)
 
 # Connexion à la BD
 conn = sqlite3.connect('db.sqlite', check_same_thread=False)
@@ -21,9 +23,7 @@ class Compte(UserMixin):
         self.mot_de_passe_hash = mot_de_passe_hash
 
 def utilisateur_existant(pseudo):
-    
     cursor = conn.cursor()
-    
     cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
     pseudo = cursor.fetchone()
     if pseudo:
@@ -112,10 +112,17 @@ def index():
     if request.method == 'POST':
         pseudo_ami = request.form['pseudo_ami']
         if utilisateur_existant(pseudo_ami):
-            return 'Conversation initié'
+            join_room(pseudo_ami)
+            return render_template('message.html', pseudo_ami=pseudo_ami)
         else:
             return 'Pseudo non valide'
     return render_template('index.html')
+
+@socketio.on("message")
+def sendMessage(data):
+    pseudo_ami = data['pseudo_ami']
+    message = data['message']
+    send(message, room=pseudo_ami)
 
 @app.route('/log_out', methods=['GET'])
 #@login_required
@@ -123,6 +130,5 @@ def log_out():
     logout_user()
     return 'Déconnecté avec succès !'
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    socketio.run(app, debug=True)

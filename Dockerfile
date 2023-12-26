@@ -2,13 +2,7 @@ FROM python:3.8-slim
 
 WORKDIR /app
 
-COPY app.py .
-COPY requirements.txt .
-COPY db.sqlite .
-COPY /templates .
-COPY /instance .
-COPY /__pycache__ .
-
+COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
