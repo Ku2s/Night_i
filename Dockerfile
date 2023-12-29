@@ -8,4 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 EXPOSE 5000
 
-CMD ["python", "app.py", "tail", "-f", "/dev/null"]
+RUN pip install gunicorn
+
+CMD ["gunicorn", "-k", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", "app:app", "-b", "0.0.0.0:5000"]

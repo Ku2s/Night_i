@@ -4,7 +4,6 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_socketio import SocketIO, send, join_room, leave_room
 
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'salutjesuisuneclé'
 socketio = SocketIO(app)
@@ -61,7 +60,7 @@ def sign_in():
         password = request.form['mot_de_passe_hash']
 
         # Vérif de pseudo
-        if utilisateur_existant(username)== True:
+        if utilisateur_existant(username):
             return 'Nom d\'utilisateur déjà pris. Choisissez en un autre.'
         
         # Insertion du nouveau compte dans la BD
@@ -112,17 +111,27 @@ def index():
     if request.method == 'POST':
         pseudo_ami = request.form['pseudo_ami']
         if utilisateur_existant(pseudo_ami):
-            join_room(pseudo_ami)
             return render_template('message.html', pseudo_ami=pseudo_ami)
         else:
             return 'Pseudo non valide'
     return render_template('index.html')
 
+
 @socketio.on("message")
 def sendMessage(data):
     pseudo_ami = data['pseudo_ami']
     message = data['message']
+    print(f"Serveur: message reçu de{request.sid} pour {pseudo_ami}: {message}")
     send(message, room=pseudo_ami)
+    print('Serveur: message envoyé')
+
+@socketio.on('join')
+def join(data):
+    pseudo_ami = data['pseudo_ami']
+    join_room(pseudo_ami)
+
+    # Broadcast sur le l'arrivé d'un nouveu utilisateur
+    send({"Un utilisateur vien de se connecter!"}, room=pseudo_ami)
 
 @app.route('/log_out', methods=['GET'])
 #@login_required
@@ -131,4 +140,4 @@ def log_out():
     return 'Déconnecté avec succès !'
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app)

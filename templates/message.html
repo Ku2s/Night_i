@@ -25,17 +25,21 @@
             let p = document.createElement("p")
             p.innerText = "Vous êtes connecté!"
             messageContainer.appendChild(p)
+            socket.emit("join", { pseudo_ami: pseudo_ami })
+
         });
 
         let messageInput = document.getElementById("messageInput");
 
         socket.on('message', (message) => {
+            console.log('Client : Reception du message ...')
             let messageElement = document.createElement("p")
             messageElement.innerText = message
             messageContainer.appendChild(messageElement)
         });
 
         function sendMessage() {
+            console.log(`Client : envoi du meassage pour ${pseudo_ami}: ${messageInput.value}`);
             socket.emit("message", {pseudo_ami: pseudo_ami, message: messageInput.value});
             messageInput.value = "";
         }
