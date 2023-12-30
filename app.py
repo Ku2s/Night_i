@@ -118,7 +118,7 @@ def index():
 
 
 @socketio.on("message")
-def sebrodcast ndMessage(data):
+def sendMessage(data):
     pseudo_ami = data['pseudo_ami']
     message = data['message']
     print(f"Serveur: message reçu de{request.sid} pour {pseudo_ami}: {message}")
@@ -130,7 +130,7 @@ def join(data):
     pseudo_ami = data['pseudo_ami']
     join_room(pseudo_ami)
 
-    # Broadcast 
+    # Broadcast sur le l'arrivé d'un nouveu utilisateur
     send(["Un utilisateur vien de se connecter!"], room=pseudo_ami)
 
 @app.route('/log_out', methods=['GET'])
