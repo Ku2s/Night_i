@@ -48,12 +48,19 @@
             messageInput.value = "";
         }
 
+        //Quitter la room
+        function leaveroom(){
+            socket.emit("leave_room",{room_id:room_id})
+        }
+
     </script>
+
     <p>
         <a href="/index">
-            <button> Revenir au salon</button>
+            <button id="buttonLobby" onclick="leaveroom()"> Revenir au salon</button>
         </a>
     </p>
+
     <p><a href="/log_out">Déconnexion</a></p>
 </body>
 </html>

@@ -141,10 +141,18 @@ def join(data):
         print(f'L utilisateur {current_user.pseudo} s est connecté à la room {room_id}')
         affichage_connection = f'{current_user.pseudo} s\'est connecté'
         send({"msg":affichage_connection}, room=room_id)
-        return render_template('message.html', room_id = room_id)
     else:
         print("Erreur de room")
 
+@socketio.on('leave_room')
+@login_required
+def leave(data):
+    room_id = data.get('room_id')
+    if room_id:
+        leave_room(room_id)
+        print(f'{current_user.pseudo} a quitté la room {room_id}')
+    else:
+        flash('Echec lors de la déconnexion de la room')
 
 @app.route('/message', methods=['GET','POST'])
 @login_required
