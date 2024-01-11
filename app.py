@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,11 +6,15 @@ from flask_socketio import SocketIO, send, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'salutjesuisuneclé'
-socketio = SocketIO(app)
+app.config['SESSION_TYPE'] = 'filesystem'
+
+app.config['SESSION_PERMANENT'] = True
+socketio = SocketIO(app, manage_session=False)
 
 # Connexion à la BD
 conn = sqlite3.connect('db.sqlite', check_same_thread=False)
 login_manager = LoginManager(app)
+login_manager.init_app(app)
 
 class Compte(UserMixin):
     def __init__(self, user_id, nom, prenom, mail, pseudo, mot_de_passe_hash):
@@ -20,10 +24,13 @@ class Compte(UserMixin):
         self.mail = mail
         self.pseudo = pseudo
         self.mot_de_passe_hash = mot_de_passe_hash
+    
+    def get_id(self):
+        return str(self.pseudo)
 
 def utilisateur_existant(pseudo):
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
+    cursor.execute("SELECT pseudo FROM Compte WHERE pseudo = ?", (pseudo,))
     pseudo = cursor.fetchone()
     if pseudo:
         cursor.close()
@@ -37,9 +44,8 @@ def load_user(pseudo):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM Compte WHERE pseudo = ?", (pseudo,))
     user_data = cursor.fetchone()
-    cursor.close()
-
     if user_data:
+        cursor.close()
         return Compte(*user_data)
 
 @app.route('/')
@@ -80,7 +86,7 @@ def sign_in():
         if new_user_data:
             new_user = Compte(*new_user_data)
             login_user(new_user)
-            return render_template('index.html')
+            return redirect(url_for('index'))
 
     return render_template('sign_in.html')
 
@@ -99,45 +105,68 @@ def log_in():
         if utilisateur_existant(pseudo) and check_password_hash(user_data[5], mdp):
             user = Compte(*user_data)
             login_user(user)
-            return render_template('index.html')
+            return redirect(url_for('index'))
         else:
             return 'Échec de l\'authentification. Vérifiez vos informations de connexion.'
     else:
         return render_template('log_in.html')
 
+utilisateurs_connectes = set()
+
 @app.route('/index', methods=['GET','POST'])
-#@login_required
+@login_required
 def index():
-    if request.method == 'POST':
-        pseudo_ami = request.form['pseudo_ami']
-        if utilisateur_existant(pseudo_ami):
-            return render_template('message.html', pseudo_ami=pseudo_ami)
-        else:
-            return 'Pseudo non valide'
     return render_template('index.html')
 
+@socketio.on('connect')
+def handle_connect():
+    if current_user.is_authenticated:
+        utilisateurs_connectes.add(current_user.pseudo)
+        print(f"{utilisateurs_connectes}")
+        socketio.emit('join_connected_list', list(utilisateurs_connectes))
 
-@socketio.on("message")
-def sendMessage(data):
-    pseudo_ami = data['pseudo_ami']
-    message = data['message']
-    print(f"Serveur: message reçu de{request.sid} pour {pseudo_ami}: {message}")
-    send(message, room=pseudo_ami)
-    print('Serveur: message envoyé')
 
-@socketio.on('join')
+@socketio.on('disconnect')
+def handle_disconnect():
+    if current_user.is_authenticated:
+        utilisateurs_connectes.remove(current_user.pseudo)
+        socketio.emit('join_connected_list', list(utilisateurs_connectes))
+
+@socketio.on('join_room')
+@login_required
 def join(data):
-    pseudo_ami = data['pseudo_ami']
-    join_room(pseudo_ami)
+    if isinstance(data, dict): 
+        room_id = data.get('room_id')
+        join_room(room_id)
+        print(f'L utilisateur {current_user.pseudo} s est connecté à la room {room_id}')
+        affichage_connection = f'{current_user.pseudo} s\'est connecté'
+        send(affichage_connection, room=room_id)
+        return render_template('message.html', room_id = room_id)
+    else:
+        print("Erreur de room")
 
-    # Broadcast sur le l'arrivé d'un nouveu utilisateur
-    send(["Un utilisateur vien de se connecter!"], room=pseudo_ami)
+
+@app.route('/message', methods=['GET','POST'])
+@login_required
+def pageMess():
+    room_id = request.args.get('room_id')
+    return render_template('message.html', room_id = room_id)
+
+@socketio.on('message_event')
+@login_required
+def sendMessage(data):
+    message = data['message']
+    room_id = data['room_id']
+    print(f"Serveur: message reçu de {current_user.pseudo} pour la room {room_id}: {message}")
+    send({"msg" :message}, room=room_id)
+    print(f'Serveur: message envoyé à la room {room_id}')
 
 @app.route('/log_out', methods=['GET'])
-#@login_required
+@login_required
 def log_out():
     logout_user()
-    return 'Déconnecté avec succès !'
+    flash('Déconnecté avec succès !', 'sucess')
+    return render_template('sign_in.html')
 
 if __name__ == '__main__':
-    socketio.run(app)
+    socketio.run(app, debug=True)

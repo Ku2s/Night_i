@@ -15,37 +15,45 @@
     
     <input type="text" id="messageInput" placeholder="Ecrivez votre message">
     <button id="button" onclick="sendMessage()">Envoyer</button>
+
     <div class="messages"></div>
+
     <script>
         const socket = io();
-        const pseudo_ami = "{{ pseudo_ami }}";
+        const room_id= `{{ room_id }}`;
+        let pseudo_client = `{{current_user.pseudo}}`;
         let messageContainer = document.querySelector(".messages");
 
-        socket.on("connect", () => {
-            let p = document.createElement("p")
-            p.innerText = "Vous êtes connecté!"
-            messageContainer.appendChild(p)
-            socket.emit("join", { pseudo_ami: pseudo_ami })
+        console.log(`Actuellement sur la room : ${room_id}`)
 
-        });
+
+        //Rejoin la room
+        socket.emit("join_room", {room_id:room_id})
 
         let messageInput = document.getElementById("messageInput");
 
-        socket.on('message', (message) => {
-            console.log('Client : Reception du message ...')
+        //Affichage des messages reçus
+        socket.on('message', (data) => {
+            console.log(`Affichage du message dans la room ${room_id}`)
             let messageElement = document.createElement("p")
-            messageElement.innerText = message
+            messageElement.innerText = data.msg
             messageContainer.appendChild(messageElement)
         });
 
+        // Envoi messages
         function sendMessage() {
-            console.log(`Client : envoi du meassage pour ${pseudo_ami}: ${messageInput.value}`);
-            socket.emit("message", {pseudo_ami: pseudo_ami, message: messageInput.value});
+            console.log(`Client : envoi du meassage pour la room ${room_id}: ${messageInput.value}`);
+            msg = `${pseudo_client}: ${messageInput.value}`
+            socket.emit("message_event", {room_id: room_id, message: msg});
             messageInput.value = "";
         }
 
     </script>
-
+    <p>
+        <a href="/index">
+            <button> Revenir au salon</button>
+        </a>
+    </p>
     <p><a href="/log_out">Déconnexion</a></p>
 </body>
 </html>
