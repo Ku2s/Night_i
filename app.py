@@ -140,7 +140,7 @@ def join(data):
         join_room(room_id)
         print(f'L utilisateur {current_user.pseudo} s est connecté à la room {room_id}')
         affichage_connection = f'{current_user.pseudo} s\'est connecté'
-        send(affichage_connection, room=room_id)
+        send({"msg":affichage_connection}, room=room_id)
         return render_template('message.html', room_id = room_id)
     else:
         print("Erreur de room")
