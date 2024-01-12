@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>   
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+    <title>Espace de messages</title>
+</head>
+
+<body>
+    
+    <input type="text" id="messageInput" placeholder="Ecrivez votre message">
+    <button id="button" onclick="sendMessage()">Envoyer</button>
+
+    <div class="messages"></div>
+
+    <script>
+        const socket = io();
+        const room_id= `{{ room_id }}`;
+        let pseudo_client = `{{current_user.pseudo}}`;
+        let messageContainer = document.querySelector(".messages");
+
+        console.log(`Actuellement sur la room : ${room_id}`)
+        console.log(`Pseudo de l'utilisateur : ${pseudo_client}`);
+
+        //Rejoin la room
+        socket.emit("join_room", {room_id:room_id})
+
+        let messageInput = document.getElementById("messageInput");
+
+        // Affichage des messages reçus
+        socket.on('message_event', (data) => {
+            console.log("Received data:", data);
+            if (data.message) {
+                console.log('Received message:', data.message);
+                console.log(`Affichage du message dans la room ${room_id}`);
+                let messageElement = document.createElement("p");
+                messageElement.innerText = data.message;
+                messageContainer.appendChild(messageElement);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            } else {
+                console.error('Received undefined message:', data);
+            }
+        });
+
+
+
+        // Envoi messages
+        function sendMessage() {
+            console.log(`Client : envoi du meassage pour la room ${pseudo_client}: ${messageInput.value}`);
+            message = `${pseudo_client}: ${messageInput.value}`
+            socket.emit("sauv_mess", {room_id: room_id, message: message});
+            messageInput.value = "";
+        }
+
+        //Quitter la room
+        function leaveroom(){
+            socket.emit("leave_room",{room_id:room_id})
+        }
+
+    </script>  
+    <p>
+        <a href="/index">
+            <button id="buttonLobby" onclick="leaveroom()"> Revenir au salon</button>
+        </a>
+    </p>
+
+    <p><a href="/log_out">Déconnexion</a></p>
+</body>
+</html>
