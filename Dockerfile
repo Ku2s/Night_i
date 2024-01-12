@@ -10,4 +10,4 @@ EXPOSE 5000
 
 RUN pip install gunicorn
 
-CMD ["gunicorn", "-k", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", "app:app", "-b", "0.0.0.0:5000"]
+CMD ["gunicorn", "-k", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", "app:app", "-b", "0.0.0.0:5000", "--forwarded-allow-ips", "*"]
