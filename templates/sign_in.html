@@ -4,31 +4,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Créer un compte</title>
+    <title>Twistoufoulou</title>
+    <link rel="stylesheet" type="text/css" href="/static/css/sign_in.css">
+    <link rel="shortcut icon" href="/static/images/1cf5bd94-00e7-4ea8-b645-eb25f825a806.ico" type="image/x-icon"> 
+
 </head>
 
 <body>
-    <h1>Créer un compte</h1>
-    <form action="/sign_in" method="post">
-        <label for="last_name">Nom:</label>
-        <input type="text" id="nom" name="nom" required><br>
+    <main>
+        <h1>Créer un compte</h1>
+        <form action="/sign_in" method="post">
+            <fieldset>
+                <label for="last_name">Nom:</label>
+                <input type="text" id="nom" name="nom" required><br>
 
-        <label for="name">Prenom:</label>
-        <input type="text" id="prenom" name="prenom" required><br>
-        
-        <label for="email">Mail:</label>
-        <input type="email" id="mail" name="mail" required><br>
+                <label for="name">Prenom:</label>
+                <input type="text" id="prenom" name="prenom" required><br>
+                
+                <label for="email">Mail:</label>
+                <input type="email" id="mail" name="mail" required><br>
 
-        <label for="username">Nom d'utilisateur:</label>
-        <input type="text" id="pseudo" name="pseudo" required><br>
-        
-        <label for="password">Mot de passe:</label>
-        <input type="password" id="mot_de_passe_hash" name="mot_de_passe_hash" required><br>
+                <label for="username">Nom d'utilisateur:</label>
+                <input type="text" id="pseudo" name="pseudo" required><br>
+                
+                <label for="password">Mot de passe:</label>
+                <input type="password" id="mot_de_passe_hash" name="mot_de_passe_hash" required><br>
 
-        <input type="submit" value="Créer le compte">
-    </form>
+                <input type="submit" value="Créer le compte">
+            </fieldset>
+        </form>
 
-    <p>Vous avez déjà un compte? <a href="/log_in">Connectez-vous ici</a>.</p>
+        <p> <span class="mini">Vous avez déjà un compte?</span> <a href="/log_in" class="Connexion">Connectez-vous ici</a>.</p>
+    </main>
 </body>
 
 </html>

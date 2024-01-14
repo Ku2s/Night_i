@@ -9,52 +9,82 @@
         integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
         crossorigin="anonymous"></script>
     <title>Espace de messages</title>
+    <link rel="shortcut icon" href="/static/images/1cf5bd94-00e7-4ea8-b645-eb25f825a806.ico" type="image/x-icon"> 
+    <link rel="stylesheet" href="/static/css/message.css">
+    <script crossorigin="anonymous" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+    <!-- Ajoutez ces liens CDN pour React et ReactDOM -->
+    <script crossorigin="anonymous" src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin="anonymous" src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+
+    <!-- Ajoutez ce lien CDN pour Babel (convertit JSX en JavaScript compréhensible par le navigateur) -->
+    <script crossorigin="anonymous" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
-
 <body>
-    
-    <input type="text" id="messageInput" placeholder="Ecrivez votre message">
-    <button id="button" onclick="sendMessage()">Envoyer</button>
-
-    <div class="messages"></div>
+    <div id="chat-container">
+        <ul id="messages"></ul>
+        <div id="input-container">
+            <input type="text" id="messageInput" placeholder="Ecrivez votre message">
+            <button id="button" onclick="sendMessage()">Envoyer</button>
+        </div>
+    </div>      
 
     <script>
         const socket = io();
         const room_id= `{{ room_id }}`;
         let pseudo_client = `{{current_user.pseudo}}`;
-        let messageContainer = document.querySelector(".messages");
+        let messageContainer = document.getElementById("messages");
 
         console.log(`Actuellement sur la room : ${room_id}`)
-
+        console.log(`Pseudo de l'utilisateur : ${pseudo_client}`);
 
         //Rejoin la room
         socket.emit("join_room", {room_id:room_id})
 
         let messageInput = document.getElementById("messageInput");
 
-        //Affichage des messages reçus
+        // Affichage des messages reçus
         socket.on('message', (data) => {
-            console.log(`Affichage du message dans la room ${room_id}`)
-            let messageElement = document.createElement("p")
-            messageElement.innerText = data.msg
-            messageContainer.appendChild(messageElement)
+            console.log("Received data:", data);
+            if (data.message) {
+                console.log('Received message:', data.message);
+                console.log(`Affichage du message dans la room ${room_id}`);
+                let messageElement = document.createElement("li");
+                messageElement.innerText = data.message;
+                // Ajout de la classe appropriée en fonction de l'expéditeur
+                if (data.sender === pseudo_client) {
+                    messageElement.classList.add("sent-message");
+                } else {
+                    messageElement.classList.add("received-message");
+                }
+                messageContainer.appendChild(messageElement);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            } else {
+                console.error('Received undefined message:', data);
+            }
         });
-
+        
         // Envoi messages
         function sendMessage() {
-            console.log(`Client : envoi du meassage pour la room ${room_id}: ${messageInput.value}`);
-            msg = `${pseudo_client}: ${messageInput.value}`
-            socket.emit("message_event", {room_id: room_id, message: msg});
+            console.log(`Client : envoi du meassage pour la room ${pseudo_client}: ${messageInput.value}`);
+            message = `${pseudo_client}: ${messageInput.value}`
+            socket.emit("sauv_mess", {room_id: room_id, message: message});
             messageInput.value = "";
         }
+
+        messageInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Empêche le comportement par défaut (retour à la ligne)
+                sendMessage();
+            }
+        });
 
         //Quitter la room
         function leaveroom(){
             socket.emit("leave_room",{room_id:room_id})
         }
 
-    </script>
-
+    </script>  
     <p>
         <a href="/index">
             <button id="buttonLobby" onclick="leaveroom()"> Revenir au salon</button>

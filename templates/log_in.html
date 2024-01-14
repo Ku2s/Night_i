@@ -4,21 +4,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="/static/css/log_in.css">
     <title>Page de connexion</title>
+    <link rel="shortcut icon" href="/static/images/1cf5bd94-00e7-4ea8-b645-eb25f825a806.ico" type="image/x-icon"> 
+    
 </head>
 
 <body>
-    <h1>Connexion</h1>
+    <main>
+        <h1>Connexion</h1>
 
-    <form action="/log_in" method="post">
-        <label for="username">Nom d'utilisateur:</label>
-        <input type="text" id="pseudo" name="pseudo" required><br>
+        <form action="/log_in" method="post">
+            <fieldset>
+                <label for="username">Nom d'utilisateur:</label>
+                <input type="text" id="pseudo" name="pseudo" required><br>
 
-        <label for="password">Mot de passe:</label>
-        <input type="password" id="mot_de_passe" name="mot_de_passe" required><br>
+                <label for="password">Mot de passe:</label>
+                <input type="password" id="mot_de_passe" name="mot_de_passe" required><br>
 
-        <input type="submit" value="Suivant">
-    </form>
-
+                <input type="submit" value="Suivant">
+            </fieldset>
+        </form>
+    </main>
 </body>
 </html>

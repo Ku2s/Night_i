@@ -8,10 +8,11 @@
         integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
         crossorigin="anonymous"></script>
     <title>Bienvenue</title>
+    <link rel="stylesheet" href="/static/css/index.css">
+    <link rel="shortcut icon" href="/static/images/1cf5bd94-00e7-4ea8-b645-eb25f825a806.ico" type="image/x-icon"> 
 </head>
 <body>
-    <p>Bienvenue!</p>
-
+    <p>Bienvenue <span id="pseudoDisplay">${pseudo_client}</span> !</p>
     <div id="utilisateursConnectes">
         <div id="nbrConnectes"></div>
         <p>Utilisateurs en ligne :</p>
@@ -23,6 +24,8 @@
         const socket = io();
         let liste_utilisateurs = document.getElementById("listePseudos");
         let pseudo_client = `{{current_user.pseudo}}`;
+        //Afficher le pseudo
+        document.getElementById("pseudoDisplay").innerText = pseudo_client;
 
         function ajouterUtilisateur(utilisateur){
             if(pseudo_client != utilisateur){
@@ -55,6 +58,6 @@
         });
     </script>
 
-    <p><a href="/log_out">Déconnexion</a></p>
+    <p><a href="/log_out" class="deconnexion-btn">Déconnexion</a></p>
 </body>
 </html>

@@ -2,23 +2,16 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_socketio import SocketIO, send, join_room, leave_room, emit
+from flask_socketio import SocketIO, send, join_room, leave_room
 from cryptography.fernet import Fernet
-import socket
-import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'salutjesuisuneclé'
 app.config['SESSION_TYPE'] = 'filesystem'
 
 KEY_FILE = 'encryption_key.key'
-if os.path.exists(KEY_FILE):
-    with open(KEY_FILE, 'rb') as key_file:
-        cipher_key = key_file.read()
-else:
-    cipher_key = Fernet.generate_key()
-    with open(KEY_FILE, 'wb') as key_file:
-        key_file.write(cipher_key)
+with open(KEY_FILE, 'rb') as key_file:
+    cipher_key = key_file.read()
 cipher = Fernet(cipher_key)
 app.config['SESSION_PERMANENT'] = True
 socketio = SocketIO(app, manage_session=False)
@@ -159,23 +152,24 @@ def handle_disconnect():
 def join(data):
     room_id = data.get('room_id')
     join_room(room_id)
+    print(f'L utilisateur {current_user.pseudo} s est connecté à la room {room_id}')
+
+    # Récupérer les anciens messages sauvegardés dans la base de données
+    cursor = conn.cursor()
+    cursor.execute("SELECT messages FROM conversation WHERE room_id = ?", (room_id,))
+    result = cursor.fetchone()
+    #Envoyer les messages dans la room
+    if result and result[0]:  
+        saved_messages = result[0].split('\n')
+        for message in saved_messages:
+            if message:
+                decrypted_message = cipher.decrypt(message.encode()).decode()
+                send({'message': decrypted_message}, room=request.sid)
+    cursor.close()
+
     affichage_connection = f'{current_user.pseudo} s\'est connecté'
-    emit("message_event", {"message": affichage_connection}, room=room_id)
-    if room_existant(room_id):
-        # Récupérer les messages depuis la base de données
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT messages FROM conversation WHERE room_id = ?", (room_id,))
-            result = cursor.fetchone()
-            if result:
-                stored_messages = result[0].strip().split('\n')
-                for message in stored_messages:
-                    # Décoder le message avant de l'envoyer
-                    decrypted_message = cipher.decrypt(message.encode()).decode()
-                    print(f"Original message: {message}, Decrypted message: {decrypted_message}")
-                    emit("message_event", {"message": decrypted_message})
-        finally:
-            cursor.close()
+    send({'message':affichage_connection}, room=room_id)
+
 
 @socketio.on('leave_room')
 @login_required
@@ -199,7 +193,7 @@ def sendMessage(data):
     message = data['message']
     room_id = data['room_id']
     print(f"Serveur: message reçu de {current_user.pseudo} pour la room {room_id}: {message}")
-    send({"message" :message}, room=room_id)
+    socketio.emit("message_event", {"message": message, "room_id": room_id}, room=room_id)
     print(f'Serveur: message envoyé à la room {room_id}')
 
 @socketio.on("sauv_mess")
@@ -207,27 +201,25 @@ def SAUVMESS(data):
     room_id = data['room_id']
     message = data['message']
     # Cryptage du message
-    encrypted_message = cipher.encrypt(message.encode())
-    cursor=conn.cursor()
+    encrypted_message = cipher.encrypt(message.encode()).decode()  
+    # Assurez-vous de convertir le message en bytes avant le chiffrement
+    cursor = conn.cursor()
     try:
-        # Vérifier si la chambre existe déjà
         if room_existant(room_id):
             # La chambre existe déjà, ajouter le message chiffré à la colonne messages
-            cursor.execute("UPDATE conversation SET messages = messages || ? WHERE room_id = ?", 
-                           cursor.execute("UPDATE conversation SET messages = messages || ? WHERE room_id = ?", ("\n" + encrypted_message.decode(), room_id)))
+            cursor.execute("UPDATE conversation SET messages = messages || ? WHERE room_id = ?",
+                           ("\n" + encrypted_message, room_id))
         else:
             # La chambre n'existe pas, créer une nouvelle ligne avec le room_id et le message chiffré
             cursor.execute("INSERT INTO conversation (room_id, messages) VALUES (?, ?)",
-                           (room_id, encrypted_message.decode()))
-            # Sauvegarder les changements dans la BD
+                           (room_id, encrypted_message))
+        # Sauvegarder les changements dans la BD
         conn.commit()
-        # Décryptage du message pour l'envoyer à la fonction 'message'
-        decrypted_message = cipher.decrypt(encrypted_message).decode()
-        print(f"Decrypted message: {decrypted_message}")
-        message_data = {"room_id": room_id, "message": decrypted_message}
-        print(f"Message data to emit: {message_data}")
-        socketio.emit("message_event", message_data)
-    finally: 
+        decrypted_message = cipher.decrypt(encrypted_message.encode()).decode()
+        send({'message':decrypted_message}, room=room_id)
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
         cursor.close()
 
 @app.route('/log_out', methods=['GET'])
