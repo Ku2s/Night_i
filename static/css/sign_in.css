@@ -1,0 +1,69 @@
+h1 {
+    color: royalblue;
+    font-family: 'Lobster', cursive;
+    font-size: 3em;
+}
+
+body {
+    background-image: url('/static/images/rachel-strong-VhcxuEGNXo4-unsplash.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+body, html {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* 100% de la hauteur de la vue (viewport) */
+    background-color: #f0f0f0; /* Couleur de fond différente */
+}
+
+main {
+    text-align: center;
+}
+
+fieldset {
+    border: 2px solid #3498db; /* Couleur de la bordure */
+    border-radius: 10px; /* Bordures arrondies */
+    padding: 20px;
+    background-color: #ffffff; /* Couleur de fond différente */
+}
+
+/* Ajoutez d'autres styles au besoin pour les labels, les inputs, etc. */
+label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    background-color: #3498db; /* Couleur de fond pour le bouton de soumission */
+    color: #ffffff; /* Couleur du texte pour le bouton de soumission */
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #2980b9; /* Couleur de fond au survol du bouton de soumission */
+}
+
+.mini {
+    font-weight: 700; /* Met en gras le texte */
+    color: brown; /* Couleur du texte */
+    font-size: 16px; /* Taille de la police */
+}
+
+.connexion{
+    font-size: 2em;
+}

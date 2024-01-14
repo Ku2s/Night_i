@@ -1,0 +1,133 @@
+body {
+    background-image: url('/static/images/joel-muniz-XqXJJhK-c08-unsplash.jpg');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+#chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    height: 100%;
+}
+
+body, html {
+    height: 100%;
+}
+
+#messageInput {
+    display: inline-block;
+}
+
+
+#messageInput {
+    width: 70%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#messageInput {
+    width: 70%;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+#button {
+    padding: 10px;
+    background-color: #3498db;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#button:hover {
+    background-color: #2980b9;
+}
+
+ul#messages {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1;
+    overflow-y: auto; /* Ajout de défilement vertical en cas de nombreux messages */
+}
+
+ul#messages li {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    max-width: 70%; /* Ajout de cette propriété pour limiter la largeur des messages */
+}
+
+.sent-message {
+    background-color: #3498db;
+    color: #fff;
+    align-self: flex-end;
+}
+
+.received-message {
+    align-self: flex-start; /* Pour aligner le message à gauche */
+    background-color: #fff; /* Fond blanc pour les messages reçus */
+    color: #3498db; /* Texte bleu pour les messages reçus */
+}
+
+#input-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fff; /* Fond de la barre de saisie */
+    padding: 10px;
+}
+
+a#buttonLobby {
+    display: inline-block;
+    padding: 10px;
+    background-color: #3498db;
+    color: #fff;
+    text-decoration: none;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+a#buttonLobby:hover {
+    background-color: #2980b9;
+}
+
+p a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+p a:hover {
+    text-decoration: underline;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px;
+    background-color: #fff; /* Fond blanc */
+    color: #3498db; /* Couleur du texte bleu, à ajuster selon vos préférences */
+    text-decoration: none;
+    border: 1px solid #3498db; /* Bordure bleue, à ajuster selon vos préférences */
+    border-radius: 5px; /* Coins arrondis */
+    transition: background-color 0.3s, color 0.3s;
+    background-color: #fff; /* Couleur de fond explicitement spécifiée */
+}
+
+
+.btn:hover {
+    background-color: #3498db; /* Fond bleu au survol */
+    color: #fff; /* Texte blanc au survol */
+}

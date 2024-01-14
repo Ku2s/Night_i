@@ -1,0 +1,65 @@
+h1 {
+    color: royalblue;
+    font-family: 'Lobster', cursive;
+    font-size: 3em;
+}
+
+body {
+    background-image: url('/static/images/shelby-miller-SkOiBDYgXdI-unsplash.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+.container {
+    background-color: #8B4513; /* Couleur de fond */
+    border-radius: 15px; /* Bordures arrondies */
+    padding: 20px; /* Marge intérieure pour le contenu */
+}
+
+body, html {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 70vh; /* 100% de la hauteur de la vue (viewport) */
+    background-color: #8B4513#f0f0f0; /* Couleur de fond différente */
+}
+
+main {
+    text-align: center;
+}
+
+fieldset {
+    border: 2px solid #3498db; /* Couleur de la bordure */
+    border-radius: 10px; /* Bordures arrondies */
+    padding: 20px;
+    background-color: #ffffff; /* Couleur de fond différente */
+}
+
+/* Ajoutez d'autres styles au besoin pour les labels, les inputs, etc. */
+label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    background-color: #3498db; /* Couleur de fond pour le bouton de soumission */
+    color: #ffffff; /* Couleur du texte pour le bouton de soumission */
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #2980b9; /* Couleur de fond au survol du bouton de soumission */
+}

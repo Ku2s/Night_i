@@ -1,0 +1,83 @@
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: url('/static/images/bruno-van-der-kraan-v2HgNzRDfII-unsplash.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
+body, html {
+    height: 100%;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+h1 {
+    color: #ffffff;
+    font-family: 'Lobster', cursive;
+    text-align: center;
+}
+
+#utilisateursConnectes {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-top: 20px;
+}
+
+#nbrConnectes {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#listePseudos {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#listePseudos li {
+    cursor: pointer;
+    padding: 5px;
+    margin-bottom: 5px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+#listePseudos li:hover {
+    background-color: #e0e0e0;
+}
+
+a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.deconnexion-btn {
+    display: inline-block;
+    padding: 10px;
+    background-color: #fff; /* Fond blanc */
+    color: #3498db; /* Couleur du texte bleu, à ajuster selon vos préférences */
+    text-decoration: none;
+    border: 1px solid #3498db; /* Bordure bleue, à ajuster selon vos préférences */
+    border-radius: 5px; /* Coins arrondis */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.deconnexion-btn:hover {
+    background-color: #3498db; /* Fond bleu au survol */
+    color: #fff; /* Texte blanc au survol */
+}
+
+/* Ajoutez d'autres styles au besoin */
