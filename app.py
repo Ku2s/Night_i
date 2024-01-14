@@ -187,15 +187,6 @@ def pageMess():
     room_id = request.args.get('room_id')
     return render_template('message.html', room_id = room_id)
 
-@socketio.on('message_event')
-@login_required
-def sendMessage(data):
-    message = data['message']
-    room_id = data['room_id']
-    print(f"Serveur: message reçu de {current_user.pseudo} pour la room {room_id}: {message}")
-    socketio.emit("message_event", {"message": message, "room_id": room_id}, room=room_id)
-    print(f'Serveur: message envoyé à la room {room_id}')
-
 @socketio.on("sauv_mess")
 def SAUVMESS(data):
     room_id = data['room_id']
