@@ -10,9 +10,10 @@
         crossorigin="anonymous"></script>
     <title>Espace de messages</title>
     <link rel="shortcut icon" href="/static/images/1cf5bd94-00e7-4ea8-b645-eb25f825a806.ico" type="image/x-icon"> 
+    
     <link rel="stylesheet" href="/static/css/message.css">
     <script crossorigin="anonymous" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-
+    
     <!-- Ajoutez ces liens CDN pour React et ReactDOM -->
     <script crossorigin="anonymous" src="https://unpkg.com/react@17/umd/react.development.js"></script>
     <script crossorigin="anonymous" src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
@@ -21,6 +22,7 @@
     <script crossorigin="anonymous" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
 <body>
+    <p><i>Pour supprimer un message appuyez simplement dessus</i></p>
     <div id="chat-container">
         <ul id="messages"></ul>
         <div id="input-container">
@@ -50,12 +52,19 @@
                 console.log('Received message:', data.message);
                 console.log(`Affichage du message dans la room ${room_id}`);
                 let messageElement = document.createElement("li");
-                messageElement.innerText = data.message;
-                // Ajout de la classe appropriée en fonction de l'expéditeur
-                if (data.sender === pseudo_client) {
-                    messageElement.classList.add("sent-message");
+                messageElement.innerText = data.message; //contenu
+
+                messageElement.setAttribute("data-message-id", data.message_id); //id
+
+                if (data.sender == pseudo_client) {
+                    messageElement.classList.add("sent-message"); //class
+                    messageElement.addEventListener("click", ()=>{ //click
+                        console.log(`Suppression du message`)
+                        supprimerMessage(data.message_id);
+                    });
+
                 } else {
-                    messageElement.classList.add("received-message");
+                    messageElement.classList.add("received-message"); //autre class
                 }
                 messageContainer.appendChild(messageElement);
                 messageContainer.scrollTop = messageContainer.scrollHeight;
@@ -71,6 +80,19 @@
             socket.emit("sauv_mess", {room_id: room_id, message: message});
             messageInput.value = "";
         }
+
+        function supprimerMessage(messageID) {
+            socket.emit("supprimer_message", { message_id: messageID });
+        }
+
+        // Suppression du message de l'interface
+        socket.on('message_supp', (data)=> {
+            // Suppression visuelle
+            let message_a_supp = document.querySelector(`[data-message-id="${data.message_id}"]`);
+            if (message_a_supp) {
+                message_a_supp.remove();
+            }
+        });
 
         messageInput.addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
