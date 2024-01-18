@@ -4,6 +4,8 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_socketio import SocketIO, send, join_room, leave_room
 from cryptography.fernet import Fernet
+import time
+import hashlib
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'salutjesuisuneclé'
@@ -53,6 +55,11 @@ def room_existant(room_id):
     cursor.close()
     return False
 
+def genere_message_id():
+    timestamp = str(time.time()).encode('utf-8')
+    message_hash = hashlib.md5(timestamp).hexdigest()
+    return message_hash
+    
 # Fonction de chargement de l'utilisateur
 @login_manager.user_loader
 def load_user(pseudo):
@@ -156,15 +163,21 @@ def join(data):
 
     # Récupérer les anciens messages sauvegardés dans la base de données
     cursor = conn.cursor()
-    cursor.execute("SELECT messages FROM conversation WHERE room_id = ?", (room_id,))
-    result = cursor.fetchone()
+    cursor.execute("SELECT messages,sender, message_id FROM conversation WHERE room_id = ?", (room_id,))
+    results = cursor.fetchall()
     #Envoyer les messages dans la room
-    if result and result[0]:  
-        saved_messages = result[0].split('\n')
-        for message in saved_messages:
-            if message:
-                decrypted_message = cipher.decrypt(message.encode()).decode()
-                send({'message': decrypted_message}, room=request.sid)
+    if results:
+        for result in results:
+            messages, sender, message_id = result
+
+            # Traiter le cas où il y a plusieurs messages dans la chaîne
+            individual_messages = messages.split('\n')
+
+            for individual_message in individual_messages:
+                if individual_message and sender and message_id:
+                    decrypted_message = cipher.decrypt(individual_message.encode()).decode()
+                    send({'message': decrypted_message, 'sender': sender, 'message_id': message_id}, room=request.sid)
+
     cursor.close()
 
     affichage_connection = f'{current_user.pseudo} s\'est connecté'
@@ -191,27 +204,31 @@ def pageMess():
 def SAUVMESS(data):
     room_id = data['room_id']
     message = data['message']
+    message_id = genere_message_id()
     # Cryptage du message
     encrypted_message = cipher.encrypt(message.encode()).decode()  
     # Assurez-vous de convertir le message en bytes avant le chiffrement
     cursor = conn.cursor()
     try:
-        if room_existant(room_id):
-            # La chambre existe déjà, ajouter le message chiffré à la colonne messages
-            cursor.execute("UPDATE conversation SET messages = messages || ? WHERE room_id = ?",
-                           ("\n" + encrypted_message, room_id))
-        else:
-            # La chambre n'existe pas, créer une nouvelle ligne avec le room_id et le message chiffré
-            cursor.execute("INSERT INTO conversation (room_id, messages) VALUES (?, ?)",
-                           (room_id, encrypted_message))
+        cursor.execute("INSERT INTO conversation (room_id, messages, sender, message_id) VALUES (?, ?, ?, ?)",
+                        (room_id, encrypted_message, current_user.pseudo, message_id))
         # Sauvegarder les changements dans la BD
         conn.commit()
         decrypted_message = cipher.decrypt(encrypted_message.encode()).decode()
-        send({'message':decrypted_message}, room=room_id)
+        send({'message':decrypted_message, 'message_id': message_id, 'sender':current_user.pseudo}, room=room_id)
     except Exception as e:
         print(f"An error occurred: {e}")
     finally:
         cursor.close()
+
+@socketio.on("supprimer_message")
+def suppMess(data):
+    message_id = data['message_id']
+    cursor = conn.cursor()
+    cursor.execute("DELETE from conversation WHERE message_id = ?", (message_id,))
+    cursor.close()
+    socketio.emit("message_supp", {'message_id':message_id})
+
 
 @app.route('/log_out', methods=['GET'])
 @login_required

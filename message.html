@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>   
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+    <title>Espace de messages</title>
+    <link rel="shortcut icon" href="/static/images/1cf5bd94-00e7-4ea8-b645-eb25f825a806.ico" type="image/x-icon"> 
+    
+    <link rel="stylesheet" href="/static/css/message.css">
+    <script crossorigin="anonymous" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    
+    <!-- Ajoutez ces liens CDN pour React et ReactDOM -->
+    <script crossorigin="anonymous" src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script crossorigin="anonymous" src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+
+    <!-- Ajoutez ce lien CDN pour Babel (convertit JSX en JavaScript compréhensible par le navigateur) -->
+    <script crossorigin="anonymous" src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+    <p><i>Pour supprimer un message appuyez simplement dessus</i></p>
+    <div id="chat-container">
+        <ul id="messages"></ul>
+        <div id="input-container">
+            <input type="text" id="messageInput" placeholder="Ecrivez votre message">
+            <button id="button" onclick="sendMessage()">Envoyer</button>
+        </div>
+    </div>      
+
+    <script>
+        const socket = io();
+        const room_id= `{{ room_id }}`;
+        let pseudo_client = `{{current_user.pseudo}}`;
+        let messageContainer = document.getElementById("messages");
+
+        console.log(`Actuellement sur la room : ${room_id}`)
+        console.log(`Pseudo de l'utilisateur : ${pseudo_client}`);
+
+        //Rejoin la room
+        socket.emit("join_room", {room_id:room_id})
+
+        let messageInput = document.getElementById("messageInput");
+
+        // Affichage des messages reçus
+        socket.on('message', (data) => {
+            console.log("Received data:", data);
+            if (data.message) {
+                console.log('Received message:', data.message);
+                console.log(`Affichage du message dans la room ${room_id}`);
+                let messageElement = document.createElement("li");
+                messageElement.innerText = data.message; //contenu
+
+                messageElement.setAttribute("data-message-id", data.message_id); //id
+
+                if (data.sender == pseudo_client) {
+                    messageElement.classList.add("sent-message"); //class
+                    messageElement.addEventListener("click", ()=>{ //click
+                        console.log(`Suppression du message`)
+                        supprimerMessage(data.message_id);
+                    });
+
+                } else {
+                    messageElement.classList.add("received-message"); //autre class
+                }
+                messageContainer.appendChild(messageElement);
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            } else {
+                console.error('Received undefined message:', data);
+            }
+        });
+        
+        // Envoi messages
+        function sendMessage() {
+            console.log(`Client : envoi du meassage pour la room ${pseudo_client}: ${messageInput.value}`);
+            message = `${pseudo_client}: ${messageInput.value}`
+            socket.emit("sauv_mess", {room_id: room_id, message: message});
+            messageInput.value = "";
+        }
+
+        function supprimerMessage(messageID) {
+            socket.emit("supprimer_message", { message_id: messageID });
+        }
+
+        // Suppression du message de l'interface
+        socket.on('message_supp', (data)=> {
+            // Suppression visuelle
+            let message_a_supp = document.querySelector(`[data-message-id="${data.message_id}"]`);
+            if (message_a_supp) {
+                message_a_supp.remove();
+            }
+        });
+
+        messageInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault(); // Empêche le comportement par défaut (retour à la ligne)
+                sendMessage();
+            }
+        });
+
+        //Quitter la room
+        function leaveroom(){
+            socket.emit("leave_room",{room_id:room_id})
+        }
+
+    </script>  
+    <p>
+        <a href="/index">
+            <button id="buttonLobby" onclick="leaveroom()"> Revenir au salon</button>
+        </a>
+    </p>
+
+    <p><a href="/log_out">Déconnexion</a></p>
+</body>
+</html>
